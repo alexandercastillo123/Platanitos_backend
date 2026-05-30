@@ -16,6 +16,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 @Data
@@ -23,8 +24,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
+@EqualsAndHashCode(callSuper = true)
 @Table(name = "usuario")
-public class Usuario implements UserDetails {
+public class Usuario extends EntidadBase implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -46,7 +48,7 @@ public class Usuario implements UserDetails {
     @Column(name = "fecha_nacimiento")
     private LocalDate fechaNacimiento;
     private Boolean verificado;
-    private Boolean activo;
+    private Boolean estado;
     @Builder.Default
     @Enumerated(EnumType.STRING)
     private RolUsuario rol = RolUsuario.ROLE_CLIENTE;
@@ -73,7 +75,7 @@ public class Usuario implements UserDetails {
     }
     @Override
     public boolean isAccountNonLocked() {
-        return this.activo;
+        return this.estado;
     }
     @Override
     public boolean isCredentialsNonExpired() {
@@ -81,6 +83,6 @@ public class Usuario implements UserDetails {
     }
     @Override
     public boolean isEnabled() {
-        return this.activo;
+        return this.estado;
     }
 }

@@ -40,6 +40,7 @@ public class CodigoVerificacion {
     @Builder.Default
     @Column(name = "fecha_expiracion")
     private LocalDateTime fechaExpiracion = LocalDateTime.now().plusMinutes(15);
+    private Boolean estado;
     @ManyToOne
     @JoinColumn(name = "usuario_id", nullable = false)
     private Usuario usuario;

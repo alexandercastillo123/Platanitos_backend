@@ -24,10 +24,9 @@ public class CustomUserDetails implements UserDetailsService {
 
         return User.withUsername(usuario.getEmail())
                 .password(usuario.getPassword())
-                .disabled(!usuario.getActivo())
-                .accountLocked(!usuario.getActivo())
+                .disabled(!usuario.getEstado())
+                .accountLocked(!usuario.getEstado())
                 .authorities(Collections.singletonList(new SimpleGrantedAuthority(usuario.getRol().name())))
                 .build();
     }
-    
 }
