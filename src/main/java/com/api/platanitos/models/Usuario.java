@@ -15,16 +15,18 @@ import com.api.platanitos.enums.RolUsuario;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
-@Data
 @Builder
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@EqualsAndHashCode(callSuper = true)
+@ToString(exclude = "codigoVerificacion")
 @Table(name = "usuario")
 public class Usuario extends EntidadBase implements UserDetails {
     @Id
@@ -58,6 +60,19 @@ public class Usuario extends EntidadBase implements UserDetails {
     private Set<CodigoVerificacion> codigoVerificacion = new HashSet<>();
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Usuario usuario = (Usuario) o;
+        return id != null && id.equals(usuario.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
+
+    @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return Collections.singletonList(new SimpleGrantedAuthority(rol.name()));
     }
@@ -75,7 +90,7 @@ public class Usuario extends EntidadBase implements UserDetails {
     }
     @Override
     public boolean isAccountNonLocked() {
-        return this.estado;
+        return this.estado != null ? this.estado : false;
     }
     @Override
     public boolean isCredentialsNonExpired() {
@@ -83,6 +98,6 @@ public class Usuario extends EntidadBase implements UserDetails {
     }
     @Override
     public boolean isEnabled() {
-        return this.estado;
+        return this.estado != null ? this.estado : false;
     }
 }
