@@ -1,4 +1,4 @@
-package com.api.platanitos.services.auth;
+package com.api.platanitos.services.send;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;

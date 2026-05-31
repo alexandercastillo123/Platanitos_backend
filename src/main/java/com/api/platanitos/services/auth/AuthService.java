@@ -25,6 +25,8 @@ import com.api.platanitos.jwt.JwtUtil;
 import com.api.platanitos.models.CodigoVerificacion;
 import com.api.platanitos.models.Usuario;
 import com.api.platanitos.repositories.usuario.UsuarioRepository;
+import com.api.platanitos.services.send.EmailService;
+import com.api.platanitos.services.send.SmsService;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
@@ -39,6 +41,7 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
+    private final SmsService smsService;
 
     public LoginResponse login(LoginRequest req, HttpServletResponse res){
         Authentication auth = authenticationManager.authenticate(
@@ -81,6 +84,7 @@ public class AuthService {
                 usuarioRepository.save(usuario);
                 String token = crearTokenVerificacion(usuario, TipoToken.VERIFICACION);
                 if("email".equals(req.tipo()))emailService.enviarTokenVerificacion(usuario.getEmail(), token, usuario);
+                else if("tel".equals(req.tipo()))smsService.enviarSmsVerificacion(usuario.getTelefono(), token, usuario.getId());
                 return RegistroResponse.builder()
                     .tipo(req.tipo())
                     .identificador(req.identificador())

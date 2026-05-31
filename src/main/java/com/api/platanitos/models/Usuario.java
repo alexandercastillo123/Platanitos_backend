@@ -34,7 +34,6 @@ public class Usuario extends EntidadBase implements UserDetails {
     private Long id;
     private String nombres;
     private String apellidos;
-    @Column(unique = true, nullable = false)
     private String email;
     @Column(name = "password_hash")
     private String passwordHash;
