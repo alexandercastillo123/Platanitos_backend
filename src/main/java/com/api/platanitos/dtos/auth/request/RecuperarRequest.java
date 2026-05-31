@@ -5,7 +5,7 @@ import lombok.Builder;
 @Builder
 public record RecuperarRequest(
     String token,
-    Integer id,
+    Long id,
     String password
 ) {
     

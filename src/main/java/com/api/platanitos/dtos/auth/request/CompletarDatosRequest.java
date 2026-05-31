@@ -6,7 +6,7 @@ import lombok.Builder;
 public record CompletarDatosRequest(
     String tipo,
     String token,
-    Integer id,
+    Long id,
     String identificador,
     String passwordHash
 ) {}
