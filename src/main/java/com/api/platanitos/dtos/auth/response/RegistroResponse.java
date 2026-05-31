@@ -4,5 +4,6 @@ import lombok.Builder;
 
 @Builder
 public record RegistroResponse(
+    String tipo,
     String identificador
 ) {}

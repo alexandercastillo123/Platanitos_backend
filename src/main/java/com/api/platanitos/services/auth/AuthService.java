@@ -1,12 +1,16 @@
 package com.api.platanitos.services.auth;
 
 import com.api.platanitos.repositories.codigo_verificacion.CodigoVerificacionRepository;
+
+import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +20,7 @@ import com.api.platanitos.dtos.auth.request.RegisterRequest;
 import com.api.platanitos.dtos.auth.response.LoginResponse;
 import com.api.platanitos.dtos.auth.response.RegistroResponse;
 import com.api.platanitos.enums.RolUsuario;
+import com.api.platanitos.enums.TipoToken;
 import com.api.platanitos.jwt.JwtUtil;
 import com.api.platanitos.models.CodigoVerificacion;
 import com.api.platanitos.models.Usuario;
@@ -33,22 +38,25 @@ public class AuthService {
     private final UsuarioRepository usuarioRepository;
     private final AuthenticationManager authenticationManager;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
 
     public LoginResponse login(LoginRequest req, HttpServletResponse res){
         Authentication auth = authenticationManager.authenticate(
             new UsernamePasswordAuthenticationToken(req.identificador(), req.passwordHash())
         );
-        Usuario usuario = (Usuario) auth.getPrincipal();
-        String rol = usuario.getAuthorities().stream()
+        User userDetails = (User) auth.getPrincipal();
+        Usuario usuario = usuarioRepository.findByEmailOrTelefono(req.identificador(), req.identificador())
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        String rol = userDetails.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("El usuario no tiene roles asignados"));
-        String token = jwtUtil.generarToken(usuario.getUsername(), rol);
+        String token = jwtUtil.generarToken(userDetails.getUsername(), rol);
         Cookie cookie = jwtUtil.generarCookie(token);
         res.addCookie(cookie);
         return LoginResponse.builder()
                 .id(usuario.getId())
-                .email(usuario.getEmail())
+                .email(userDetails.getUsername())
                 .nombres(usuario.getNombres())
                 .apellidos(usuario.getApellidos())
                 .rol(rol)
@@ -71,7 +79,10 @@ public class AuthService {
                 else throw new RuntimeException("Tipo de login no valido: "+ req.tipo());
                 Usuario usuario = usuarioBuilder.build();
                 usuarioRepository.save(usuario);
+                String token = crearTokenVerificacion(usuario, TipoToken.VERIFICACION);
+                if("email".equals(req.tipo()))emailService.enviarTokenVerificacion(usuario.getEmail(), token, usuario);
                 return RegistroResponse.builder()
+                    .tipo(req.tipo())
                     .identificador(req.identificador())
                     .build();
             }
@@ -84,8 +95,8 @@ public class AuthService {
         CodigoVerificacion codigo = codigoVerificacionRepository.findByTokenAndUsuarioIdWithUsuario(req.token(), req.id())
                 .orElseThrow(() -> new RuntimeException("Enlace invalido para este usuario"));
         Usuario usuario = codigo.getUsuario();
-        if("email".equals(req.tipo())) usuario.setEmail(req.identificador());
-        if("tel".equals(req.tipo())) usuario.setTelefono(req.identificador());
+        if("email".equals(req.tipo())) usuario.setTelefono(req.identificador());
+        if("tel".equals(req.tipo())) usuario.setEmail(req.identificador());
         usuario.setPasswordHash(passwordEncoder.encode(req.passwordHash()));
         usuario.setVerificado(true);
 
@@ -97,5 +108,19 @@ public class AuthService {
             .passwordHash(req.passwordHash())
             .build();
         return login(login, res);
+    }
+
+    private String crearTokenVerificacion(Usuario usuario, TipoToken tipo){
+        String tokenCadena = UUID.randomUUID().toString();
+        LocalDateTime expiracion = LocalDateTime.now().plusMinutes(15);
+
+        CodigoVerificacion codigoVerificacion = CodigoVerificacion.builder()
+                .usuario(usuario)
+                .token(tokenCadena)
+                .tipo(tipo)
+                .fechaExpiracion(expiracion)
+                .build();
+        codigoVerificacionRepository.save(codigoVerificacion);
+        return tokenCadena;
     }
 }

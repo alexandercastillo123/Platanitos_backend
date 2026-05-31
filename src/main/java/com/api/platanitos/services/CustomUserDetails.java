@@ -8,11 +8,12 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
 
 import com.api.platanitos.models.Usuario;
 import com.api.platanitos.repositories.usuario.UsuarioRepository;
 
-
+@Service
 public class CustomUserDetails implements UserDetailsService {
     @Autowired
     private UsuarioRepository usuarioRepository;

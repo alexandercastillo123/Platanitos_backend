@@ -52,13 +52,13 @@ public class SecurityConfig {
             .formLogin(f -> f.disable())
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("api/auth/**").permitAll() // Colocar rutas desprotegidas con permitAll
-                .requestMatchers("api/tienda/categorias", "api/tienda/productos").permitAll()
+                .requestMatchers("/api/auth/**").permitAll() // Colocar rutas desprotegidas con permitAll
+                .requestMatchers("/api/tienda/categorias", "/api/tienda/productos").permitAll()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
             .logout(logout -> logout
-                .logoutUrl("api/auth/logout")
+                .logoutUrl("/api/auth/logout")
                 .deleteCookies("AUTH-TOKEN")
                 .clearAuthentication(true)
                 .invalidateHttpSession(true)
