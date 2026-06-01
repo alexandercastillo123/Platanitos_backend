@@ -15,13 +15,14 @@ public class Favorito {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "usuario_id")
-    private Integer usuarioId;
+    @ManyToOne
+    @JoinColumn(name = "usuario_id")
+    private Usuario usuario;
 
     @ManyToOne
     @JoinColumn(name = "producto_id")
     private Producto producto;
 
-    @Column(name = "created_at", insertable = false, updatable = false)
-    private LocalDateTime createdAt;
+    @Column(name = "fecha_agregado", insertable = false, updatable = false)
+    private LocalDateTime fechaAgregado;
 }
