@@ -9,7 +9,7 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.api.platanitos.services.CustomUserDetails;
+import com.api.platanitos.services.CustomUserDetailsService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -21,7 +21,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
     private final JwtUtil jwtUtil;
-    private final CustomUserDetails userDetailsService;
+    private final CustomUserDetailsService userDetailsService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -47,7 +47,7 @@ public class JwtFilter extends OncePerRequestFilter {
                     if(jwtUtil.validarToken(token, email)){
                         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             userDetails, null, userDetails.getAuthorities()); // obtener objeto de autenticacion principal con sus roles del usuario
-                        authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                        authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request)); // detalles extras de la autenticacion como la ip
                         // setear autenticacion en el contexto de seguridad global de esta peticion
                         SecurityContextHolder.getContext().setAuthentication(authToken); 
                     }

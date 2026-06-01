@@ -41,7 +41,6 @@ public class CodigoVerificacion extends EntidadBase {
     private TipoToken tipo;
     @Column(name = "fecha_expiracion")
     private LocalDateTime fechaExpiracion;
-    private Boolean estado;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "usuario_id", nullable = false)
     private Usuario usuario;

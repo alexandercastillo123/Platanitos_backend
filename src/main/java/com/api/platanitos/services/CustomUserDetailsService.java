@@ -14,7 +14,7 @@ import com.api.platanitos.models.Usuario;
 import com.api.platanitos.repositories.usuario.UsuarioRepository;
 
 @Service
-public class CustomUserDetails implements UserDetailsService {
+public class CustomUserDetailsService implements UserDetailsService {
     @Autowired
     private UsuarioRepository usuarioRepository;
 
@@ -23,10 +23,12 @@ public class CustomUserDetails implements UserDetailsService {
         Usuario usuario = usuarioRepository.findByEmailOrTelefono(identificador, identificador)
                     .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        return User.withUsername(usuario.getEmail())
-                .password(usuario.getPassword())
+        String usernameOficial = (usuario.getEmail() != null) ? usuario.getEmail() : usuario.getTelefono(); 
+
+        return User.withUsername(usernameOficial)
+                .password(usuario.getPasswordHash())
                 .disabled(!usuario.getEstado())
-                .accountLocked(!usuario.getEstado())
+                .accountLocked(!usuario.getVerificado())
                 .authorities(Collections.singletonList(new SimpleGrantedAuthority(usuario.getRol().name())))
                 .build();
     }

@@ -42,9 +42,9 @@ public class SmsService {
                     cuerpoMensaje                       // El texto del SMS
             ).create();
             System.out.println("SMS de verificación enviado con éxito a: " + numeroDestino);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             // Manejo de error
-            System.err.println("Error al enviar el SMS de Twilio: " + e.getMessage());
+            throw new RuntimeException("Error al enviar el SMS de Twilio: " + e.getMessage());
         }
     }
 }

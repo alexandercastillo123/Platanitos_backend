@@ -8,5 +8,5 @@ public record CompletarDatosRequest(
     String token,
     Long id,
     String identificador,
-    String passwordHash
+    String password
 ) {}

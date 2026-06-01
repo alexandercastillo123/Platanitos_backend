@@ -3,10 +3,8 @@ package com.api.platanitos.dtos.auth.request;
 import lombok.Builder;
 
 @Builder
-public record RecuperarRequest(
+public record IdentificadorRequest(
+    String tipo,
     String token,
-    Long id,
-    String nuevaPassword
-) {
-    
-}
+    Long id
+) {}
