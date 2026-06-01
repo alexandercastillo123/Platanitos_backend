@@ -11,6 +11,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import com.api.platanitos.enums.RolUsuario;
+import com.api.platanitos.enums.TipoRegistro;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -53,6 +54,9 @@ public class Usuario extends EntidadBase implements UserDetails {
     @Builder.Default
     @Enumerated(EnumType.STRING)
     private RolUsuario rol = RolUsuario.ROLE_CLIENTE;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo_registro", nullable = false)
+    private TipoRegistro tipoRegistro;
 
     @Builder.Default
     @OneToMany(mappedBy = "usuario")

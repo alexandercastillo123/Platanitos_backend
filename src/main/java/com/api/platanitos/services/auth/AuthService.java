@@ -21,6 +21,7 @@ import com.api.platanitos.dtos.auth.request.RegisterRequest;
 import com.api.platanitos.dtos.auth.response.LoginResponse;
 import com.api.platanitos.dtos.auth.response.RegistroResponse;
 import com.api.platanitos.enums.RolUsuario;
+import com.api.platanitos.enums.TipoRegistro;
 import com.api.platanitos.enums.TipoToken;
 import com.api.platanitos.jwt.JwtUtil;
 import com.api.platanitos.models.CodigoVerificacion;
@@ -78,12 +79,27 @@ public class AuthService {
         validacionFormato.validarCampos(req.tipo(), req.identificador());
         // Se pone optional para evitar la excepcion nullpointer, haciendo una busqueda segura y que permita la caja vacia
         Optional<Usuario> usuarioOpt = usuarioRepository.findByEmailOrTelefono(req.identificador(), req.identificador());
+        // Validar en caso exista y tenga verificacion o no
         if(usuarioOpt.isPresent()) {
             Usuario user = usuarioOpt.get();
-            if(user.getVerificado() == false){
-                
-            }
+            // Si esta verificado se le contara como usuario existente
+            if(Boolean.TRUE.equals(user.getVerificado()))               
+                throw new RuntimeException("Usuario existente");
+            String tokenCadena = UUID.randomUUID().toString(); 
+            // Si esta registrado en la bd pero no esta verificado, buscar su tipo de registro para enviar por email o telefono
+            if(TipoRegistro.EMAIL.equals(user.getTipoRegistro()))
+                emailService.enviarTokenVerificacion(user.getEmail(), tokenCadena, user);
+            else if(TipoRegistro.TELEFONO.equals(user.getTipoRegistro()))
+                smsService.enviarSmsVerificacion(user.getTelefono(), tokenCadena, user.getId());
+            crearTokenVerificacion(user, tokenCadena, TipoToken.VERIFICACION);
+            return RegistroResponse.builder()
+                .tipo(req.tipo())
+                .identificador(req.identificador())
+                .build();
         }
+
+        // Establecer el tipo de registro dependiendo del que envie el frontend
+        TipoRegistro tipoReg = "email".equals(req.tipo()) ? TipoRegistro.EMAIL : TipoRegistro.TELEFONO;
 
         // Preconstruir el usuario
         Usuario.UsuarioBuilder usuarioBuilder = Usuario.builder()
@@ -92,9 +108,10 @@ public class AuthService {
             .apellidos(req.apellidos())
             .rol(RolUsuario.ROLE_CLIENTE)
             .estado(true)
-            .verificado(false);
+            .verificado(false)
+            .tipoRegistro(tipoReg);
         
-        // Añadir al plano email o el telefono dependiendo el tipo de registro
+        // Añadir al plano el email o el telefono dependiendo el tipo de registro
         if("email".equals(req.tipo())) usuarioBuilder.email(req.identificador()); 
         else if("tel".equals(req.tipo())) usuarioBuilder.telefono(req.identificador());
         // Tirar un error si es que el tipo no es email o tel
@@ -103,10 +120,12 @@ public class AuthService {
         Usuario usuario = usuarioBuilder.build(); // Construir el usuario final y guardar
         usuarioRepository.save(usuario);
         // Crear token de verificacion
-        String token = crearTokenVerificacion(usuario, TipoToken.VERIFICACION);
+        String tokenCadena = UUID.randomUUID().toString(); // generar una cadena UUID random
+        crearTokenVerificacion(usuario, tokenCadena, TipoToken.VERIFICACION);
         // Enviar por email o sms dependiendo del tipo de registro
-        if("email".equals(req.tipo()))emailService.enviarTokenVerificacion(usuario.getEmail(), token, usuario);
-        else if("tel".equals(req.tipo()))smsService.enviarSmsVerificacion(usuario.getTelefono(), token, usuario.getId());
+        if("email".equals(req.tipo()))emailService.enviarTokenVerificacion(req.identificador(), tokenCadena, usuario);
+        else if("tel".equals(req.tipo()))smsService.enviarSmsVerificacion(req.identificador(), tokenCadena, usuario.getId());
+        
         // Enviar la respuesta al controlador, para que el frontend guardes los datos en el localstorage
         return RegistroResponse.builder()
             .tipo(req.tipo())
@@ -159,17 +178,13 @@ public class AuthService {
     }
 
     // Metodo privado para generar el token de verificacion o recuperacion
-    private String crearTokenVerificacion(Usuario usuario, TipoToken tipo){
-        String tokenCadena = UUID.randomUUID().toString(); // generar una cadena UUID random
-        LocalDateTime expiracion = LocalDateTime.now().plusMinutes(15); // Añadir la expiracion con un rango de 15 minutos despues
-
+    private void crearTokenVerificacion(Usuario usuario, String token ,TipoToken tipo){
         CodigoVerificacion codigoVerificacion = CodigoVerificacion.builder()
                 .usuario(usuario)
-                .token(tokenCadena)
+                .token(token)
                 .tipo(tipo)
-                .fechaExpiracion(expiracion)
+                .fechaExpiracion(LocalDateTime.now().plusMinutes(15))
                 .build();
         codigoVerificacionRepository.save(codigoVerificacion); // guardar token en la bd
-        return tokenCadena; // retornar el token para su envio en el sms o email
     }
 }
