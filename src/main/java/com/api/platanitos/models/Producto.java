@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
@@ -27,4 +28,18 @@ public class Producto {
     private String urlImagenPrincipal;
 
     private String estado;
+
+    @ManyToOne
+    @JoinColumn(name = "descuento_id")
+    private Descuento descuento;
+
+    @ManyToOne
+    @JoinColumn(name = "marca_id")
+    private Marca marca;
+
+    @Column(name = "created_at", insertable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at", insertable = false, updatable = false)
+    private LocalDateTime updatedAt;
 }
